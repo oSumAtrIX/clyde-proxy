@@ -2,7 +2,7 @@ use poise::serenity_prelude::{CacheHttp, ChannelId, GuildId};
 
 use crate::{Context, Error, CLYDE_ID};
 
-/// Show this help menu
+/// Show this help menu.
 #[poise::command(prefix_command, track_edits, slash_command)]
 pub async fn help(
     ctx: Context<'_>,
@@ -22,7 +22,7 @@ pub async fn help(
     Ok(())
 }
 
-/// Register slash commands
+/// Register slash commands.
 #[poise::command(prefix_command, owners_only)]
 pub async fn register(ctx: Context<'_>) -> Result<(), Error> {
     poise::builtins::register_application_commands_buttons(ctx).await?;
@@ -67,7 +67,7 @@ pub async fn pair(
 }
 
 /// Send a message to the paired server.
-#[poise::command(slash_command, prefix_command, owners_only)]
+#[poise::command(slash_command, owners_only)]
 pub async fn message(
     ctx: Context<'_>,
     #[description = "The message to send"] message: String,
