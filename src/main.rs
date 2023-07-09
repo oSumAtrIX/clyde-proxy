@@ -105,7 +105,6 @@ async fn main() -> Result<(), Error> {
     let options = poise::FrameworkOptions {
         commands: vec![
             commands::help(),
-            commands::register(),
             commands::proxy(),
             commands::message(),
         ],

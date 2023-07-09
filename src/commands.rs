@@ -22,13 +22,6 @@ pub async fn help(
     Ok(())
 }
 
-/// Register slash commands.
-#[poise::command(prefix_command, owners_only)]
-pub async fn register(ctx: Context<'_>) -> Result<(), Error> {
-    poise::builtins::register_application_commands_buttons(ctx).await?;
-    Ok(())
-}
-
 /// Proxy Clyde from another Discord server to your server.
 #[poise::command(prefix_command, owners_only)]
 pub async fn proxy(
