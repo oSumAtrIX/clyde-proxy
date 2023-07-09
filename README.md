@@ -25,7 +25,7 @@ To use Clyde Proxy, run
 
 ## Authors
 
-- [@oSumAtrIX](osumatrix.me)
+- [@oSumAtrIX](https://osumatrix.me)
 
 ## License
 
