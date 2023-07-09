@@ -51,12 +51,13 @@ pub async fn pair(
     };
 
     {
-        let clone = ctx.data().pair_config.clone();
-        let mut config = clone.lock().await;
+        let mut config = ctx.data().pair_config.lock().await;
         config.guild_id = guild_id;
         config.from_channel_id = channel_id;
         config.to_channel_id = to_channel_id;
     }
+
+    ctx.defer_ephemeral().await?;
 
     ctx.say(format!(
         "Proxying <@{}> in channel <#{}> from guild {} to channel {}.",
@@ -87,5 +88,7 @@ pub async fn message(
         )
         .await?;
 
+    ctx.defer_ephemeral().await?;
+    ctx.say("Sent message to paired server").await?;
     Ok(())
 }

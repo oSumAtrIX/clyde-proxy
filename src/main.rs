@@ -6,7 +6,7 @@ use poise::{
     futures_util::lock::Mutex,
     serenity_prelude::{self as serenity, ChannelId, GuildId, UserId},
 };
-use std::{env::var, sync::Arc};
+use std::env::var;
 use tokio::sync::RwLock;
 
 type Error = Box<dyn std::error::Error + Send + Sync>;
@@ -14,7 +14,7 @@ type Context<'a> = poise::Context<'a, Data, Error>;
 
 #[derive(Default)]
 pub struct Data {
-    pair_config: Arc<Mutex<PairConfiguration>>,
+    pair_config: Mutex<PairConfiguration>,
 }
 
 #[derive(Default)]
