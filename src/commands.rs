@@ -14,7 +14,7 @@ pub async fn help(
         ctx,
         command.as_deref(),
         poise::builtins::HelpConfiguration {
-            extra_text_at_bottom: "Proxy Clyde from one server to another",
+            extra_text_at_bottom: "Proxy Clyde from one Discord server to another",
             ..Default::default()
         },
     )
