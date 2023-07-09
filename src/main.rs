@@ -7,10 +7,11 @@ use poise::{
     serenity_prelude::{self as serenity, ChannelId, GuildId, UserId},
 };
 use std::env::var;
-use tokio::sync::RwLock;
 
 type Error = Box<dyn std::error::Error + Send + Sync>;
 type Context<'a> = poise::Context<'a, Data, Error>;
+
+const CLYDE_ID: u64 = 1081004946872352958;
 
 #[derive(Default)]
 pub struct Data {
@@ -24,29 +25,30 @@ pub struct PairConfiguration {
     to_channel_id: ChannelId,
 }
 
+
 #[derive(Default)]
 struct Handler {
     options: poise::FrameworkOptions<Data, Error>,
     data: Data,
-    bot_id: RwLock<Option<UserId>>,
+    bot_id: UserId,
     shard_manager:
         std::sync::Mutex<Option<std::sync::Arc<tokio::sync::Mutex<serenity::ShardManager>>>>,
 }
 
-const CLYDE_ID: u64 = 1081004946872352958;
 
 // Custom handler to dispatch poise events.
 impl Handler {
-    pub fn new(options: poise::FrameworkOptions<Data, Error>) -> Self {
+    pub fn new(options: poise::FrameworkOptions<Data, Error>, bot_id: u64) -> Self {
         Self {
             options,
+            bot_id: UserId(bot_id),
             ..Default::default()
         }
     }
 
     async fn dispatch_poise_event(&self, ctx: &serenity::Context, event: &poise::Event<'_>) {
         let framework_data = poise::FrameworkContext {
-            bot_id: self.bot_id.read().await.unwrap(),
+            bot_id: self.bot_id,
             options: &self.options,
             user_data: &self.data,
             shard_manager: &(*self.shard_manager.lock().unwrap()).clone().unwrap(),
@@ -62,7 +64,8 @@ impl serenity::EventHandler for Handler {
         if new_message.author.bot && new_message.author.id == CLYDE_ID {
             let data = self.data.pair_config.lock().await;
 
-            if data.to_channel_id == new_message.channel_id {
+            // TODO: If the message is in a thread check for the channel id in which the thread was.
+            if data.from_channel_id == new_message.channel_id {
                 let _ = data
                     .to_channel_id
                     .say(&ctx.http, &new_message.content)
@@ -77,10 +80,6 @@ impl serenity::EventHandler for Handler {
     async fn interaction_create(&self, ctx: serenity::Context, interaction: serenity::Interaction) {
         self.dispatch_poise_event(&ctx, &poise::Event::InteractionCreate { interaction })
             .await;
-    }
-
-    async fn ready(&self, _ctx: serenity::Context, ready: serenity::Ready) {
-        *self.bot_id.write().await = Some(ready.user.id);
     }
 }
 
@@ -107,7 +106,7 @@ async fn main() -> Result<(), Error> {
         commands: vec![
             commands::help(),
             commands::register(),
-            commands::pair(),
+            commands::proxy(),
             commands::message(),
         ],
         prefix_options: poise::PrefixFrameworkOptions {
@@ -132,7 +131,13 @@ async fn main() -> Result<(), Error> {
         ..Default::default()
     };
 
-    let handler = std::sync::Arc::new(Handler::new(options));
+    let handler = std::sync::Arc::new(Handler::new(
+        options,
+        var("SELF_BOT_USER_ID")
+            .expect("Missing `DISCORD_TOKEN` environment variable")
+            .parse()
+            .unwrap(),
+    ));
 
     let mut client = serenity::Client::builder(
         var("DISCORD_TOKEN").expect("Missing `DISCORD_TOKEN` environment variable"),

@@ -3,7 +3,7 @@ use poise::serenity_prelude::{CacheHttp, ChannelId, GuildId};
 use crate::{Context, Error, CLYDE_ID};
 
 /// Show this help menu.
-#[poise::command(prefix_command, track_edits, slash_command)]
+#[poise::command(prefix_command)]
 pub async fn help(
     ctx: Context<'_>,
     #[description = "Specific command to show help about"]
@@ -14,7 +14,7 @@ pub async fn help(
         ctx,
         command.as_deref(),
         poise::builtins::HelpConfiguration {
-            extra_text_at_bottom: "This is an example bot made to showcase features of my custom Discord bot framework",
+            extra_text_at_bottom: "Proxy Clyde from one server to another",
             ..Default::default()
         },
     )
@@ -29,24 +29,23 @@ pub async fn register(ctx: Context<'_>) -> Result<(), Error> {
     Ok(())
 }
 
-/// Pair Clyde from another Discord server with this server.
-#[poise::command(slash_command, owners_only)]
-pub async fn pair(
+/// Proxy Clyde from another Discord server to your server.
+#[poise::command(prefix_command, owners_only)]
+pub async fn proxy(
     ctx: Context<'_>,
     #[description = "The guild ID of the other server"] guild_id: String,
     #[description = "The channel ID of the other server"] channel_id: String,
 ) -> Result<(), Error> {
     let guild_id = GuildId(guild_id.parse()?);
     let channel_id = ChannelId(channel_id.parse()?);
-    let to_channel_id = ctx.channel_id();
 
-    let cache = ctx.cache().unwrap();
+    let http = ctx.http();
 
-    let Some(guild) = cache.guild(guild_id) else {
+    let Ok(guild) = http.get_guild(guild_id.0).await else {
 		return Err("Guild not found".into());
 	 };
 
-    if cache.channel(channel_id.0).is_none() {
+    if http.get_channel(channel_id.0).await.is_err() {
         return Err("Channel not found".into());
     };
 
@@ -54,26 +53,25 @@ pub async fn pair(
         let mut config = ctx.data().pair_config.lock().await;
         config.guild_id = guild_id;
         config.from_channel_id = channel_id;
-        config.to_channel_id = to_channel_id;
     }
 
-    ctx.defer_ephemeral().await?;
-
     ctx.say(format!(
-        "Proxying <@{}> in channel <#{}> from guild {} to channel {}.",
-        CLYDE_ID, channel_id, guild.name, to_channel_id.0
+        "Proxying <@{}> in channel <#{}> from guild \"{}\".",
+        CLYDE_ID, channel_id, guild.name
     ))
     .await?;
     Ok(())
 }
 
 /// Send a message to the paired server.
-#[poise::command(slash_command, owners_only)]
+#[poise::command(prefix_command)]
 pub async fn message(
     ctx: Context<'_>,
     #[description = "The message to send"] message: String,
 ) -> Result<(), Error> {
-    let config = ctx.data().pair_config.lock().await;
+    let mut config = ctx.data().pair_config.lock().await;
+
+    config.to_channel_id = ctx.channel_id();
 
     config
         .from_channel_id
@@ -87,8 +85,5 @@ pub async fn message(
             ),
         )
         .await?;
-
-    ctx.defer_ephemeral().await?;
-    ctx.say("Sent message to paired server").await?;
     Ok(())
 }
