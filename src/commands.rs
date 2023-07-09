@@ -46,7 +46,7 @@ pub async fn pair(
 		return Err("Guild not found".into());
 	 };
 
-    if let None = cache.channel(channel_id.0) {
+    if cache.channel(channel_id.0).is_none() {
         return Err("Channel not found".into());
     };
 
