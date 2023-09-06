@@ -5,7 +5,7 @@ Proxy Clyde from one Discord server to another.
 
 ## Notice
 
-Moved to [Sideral-Tech/clyde-proxy]([Sideral-Tech/clyde-proxy](https://github.com/Sideral-Tech/clyde-proxy))
+Moved to [Sideral-Tech/clyde-proxy]([Sideral-Tech/clyde-proxy](https://github.com/Sideral-Tech/clyde-proxy)
 
 ## Demo
 
